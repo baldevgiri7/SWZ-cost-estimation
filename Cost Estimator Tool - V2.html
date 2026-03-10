@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARDOT Smart Work Zone Cost Estimator</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+<style>
+    /* Clean, Compact, Government/Engineering Styling */
+    :root {
+        --ardot-navy: #002855;
+        --ardot-red: #E31837;
+        --bg-color: #F4F6F9;
+        --border-color: #C0C8D1;
+        --text-main: #2C3E50;
+        --text-muted: #5D6D7E;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 13px;
+        line-height: 1.4;
+        background-color: var(--bg-color);
+        color: var(--text-main);
+    }
+
+    /* Header */
+    .site-header {
+        background-color: var(--ardot-navy);
+        color: white;
+        padding: 15px 30px;
+        border-bottom: 4px solid var(--ardot-red);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .site-header h1 { font-size: 20px; font-weight: bold; margin-bottom: 2px; }
+    .site-header p { font-size: 12px; color: #D6EAF8; }
+    .header-meta { text-align: right; font-size: 12px; color: #D6EAF8; }
+
+    /* Layout */
+    .container {
+        max-width: 1350px;
+        margin: 20px auto;
+        padding: 0 20px;
+        display: grid;
+        grid-template-columns: 440px 1fr;
+        gap: 20px;
+        align-items: start; /* Prevents stretching */
+    }
+
+    /* Panels */
+    .panel {
+        background: #ffffff;
+        border: 1px solid var(--border-color);
+        border-top: 3px solid var(--ardot-navy);
+        padding: 15px;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .panel h2 {
+        font-size: 14px;
+        color: var(--ardot-navy);
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 6px;
+        margin-bottom: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Forms */
+    .form-group { margin-bottom: 10px; }
+    .form-group.half-width { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    
+    label {
+        display: block;
+        font-weight: bold;
+        font-size: 12px;
+        margin-bottom: 3px;
+        color: var(--text-main);
+    }
+    input[type="text"], input[type="number"], input[type="date"], select {
+        width: 100%;
+        padding: 6px 10px;
+        border: 1px solid #AAB7B8;
+        border-radius: 3px;
+        font-family: inherit;
+        font-size: 13px;
+    }
+    input:focus, select:focus {
+        outline: none;
+        border-color: var(--ardot-navy);
+        box-shadow: 0 0 3px rgba(0, 40, 85, 0.3);
+    }
+    .help-text {
+        font-size: 10px;
+        color: var(--text-muted);
+        margin-top: 2px;
+        display: block;
+    }
+
+    /* Checkboxes (2-Column Grid to save space) */
+    .checkbox-list { 
+        display: grid; 
+        grid-template-columns: 1fr 1fr; 
+        gap: 6px; 
+    }
+    .checkbox-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 6px;
+        padding: 6px;
+        background: #F8F9F9;
+        border: 1px solid #E5E8E8;
+        border-radius: 3px;
+        cursor: pointer;
+    }
+    .checkbox-item:hover { background: #EAEDED; }
+    .checkbox-item input { margin-top: 2px; cursor: pointer; }
+    .checkbox-text strong { display: block; font-size: 11px; color: var(--ardot-navy); line-height: 1.2; }
+    .checkbox-text span { font-size: 10px; color: var(--text-muted); line-height: 1.1; display: block; margin-top: 2px;}
+
+    /* Collapsible Details */
+    details.panel { padding: 10px 15px; }
+    summary {
+        font-size: 14px;
+        color: var(--ardot-navy);
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        cursor: pointer;
+        list-style: none;
+        display: flex;
+        align-items: center;
+        outline: none;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::before {
+        content: "▶";
+        font-size: 10px;
+        margin-right: 8px;
+        transition: transform 0.2s;
+    }
+    details[open] summary::before { transform: rotate(90deg); }
+    details[open] summary { border-bottom: 1px solid var(--border-color); padding-bottom: 6px; margin-bottom: 12px; }
+
+    /* Buttons */
+    .btn {
+        display: inline-block;
+        padding: 10px 20px;
+        font-size: 13px;
+        font-weight: bold;
+        text-align: center;
+        text-transform: uppercase;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    .btn-primary { background: var(--ardot-red); color: white; width: 100%; margin-top: 5px; }
+    .btn-primary:hover { background: #C0142D; }
+    .btn-secondary { background: var(--ardot-navy); color: white; }
+    .btn-secondary:hover { background: #001A38; }
+    .btn-outline { background: white; color: var(--ardot-navy); border: 1px solid var(--ardot-navy); }
+    .btn-outline:hover { background: #F4F6F9; }
+
+    /* Action Bar */
+    .action-bar {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    /* Results Area */
+    #resultsArea { display: none; }
+    .placeholder {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-muted);
+        background: white;
+        border: 1px dashed var(--border-color);
+        margin-top: 15px;
+    }
+
+    /* Stat Cards */
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+    .stat-card {
+        background: white;
+        border: 1px solid var(--border-color);
+        padding: 15px;
+        text-align: center;
+        border-radius: 3px;
+    }
+    .stat-card.highlight {
+        background: var(--ardot-navy);
+        color: white;
+        border-color: var(--ardot-navy);
+    }
+    .stat-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: bold; margin-bottom: 6px; color: var(--text-muted); }
+    .stat-card.highlight .stat-title { color: #D6EAF8; }
+    .stat-value { font-size: 20px; font-weight: bold; line-height: 1.2; }
+    .stat-desc { font-size: 10px; margin-top: 4px; color: var(--text-muted); }
+    .stat-card.highlight .stat-desc { color: #A9CCE3; }
+    .text-danger { color: var(--ardot-red); }
+
+    /* Tables */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+        background: white;
+        font-size: 12px;
+    }
+    th, td {
+        padding: 8px 12px;
+        border: 1px solid var(--border-color);
+        text-align: left;
+    }
+    th {
+        background: #EAEDED;
+        color: var(--ardot-navy);
+        font-weight: bold;
+        text-transform: uppercase;
+        font-size: 10px;
+        letter-spacing: 0.5px;
+    }
+    .text-right { text-align: right; }
+    .table-footer td {
+        background: #F8F9F9;
+        font-weight: bold;
+        font-size: 13px;
+    }
+
+    /* Alerts */
+    .alert {
+        padding: 12px;
+        background: #FDEDEC;
+        border: 1px solid #FADBD8;
+        color: #922B21;
+        border-radius: 3px;
+        margin-bottom: 15px;
+        font-size: 12px;
+    }
+    .alert ul { margin-left: 20px; margin-top: 4px; }
+    .alert-error { display: none; background: #FDEDEC; border-color: #E6B0AA; color: #78281F; padding: 10px; margin-bottom: 15px; text-align: center; font-weight: bold;}
+
+    @media (max-width: 1024px) {
+        .container { grid-template-columns: 1fr; }
+        .summary-grid { grid-template-columns: 1fr 1fr; }
+    }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+    <div style="display: flex; align-items: center; gap: 15px;">
+        
+        <div>
+            <h1>A<span style="font-size: 0.75em;">R</span>DOT Smart Work Zone Cost Estimator</h1>
+            <p>Official Planning & Estimation Tool</p>
+        </div>
+    </div>
+    <div class="header-meta">
+        Fiscal Year 2026
+    </div>
+</header>
+
+<div class="container">
+    <aside>
+        <div class="panel">
+            <h2>1. Project Details</h2>
+            <div class="form-group">
+                <label>Project Name / Job Number</label>
+                <input type="text" id="projName" placeholder="e.g. Job 061590 — I-40 Corridor">
+            </div>
+            <div class="form-group half-width">
+                <div>
+                    <label>Prepared By</label>
+                    <input type="text" id="prepName" placeholder="Engineer of Record">
+                </div>
+                <div>
+                    <label>Date</label>
+                    <input type="date" id="prepDate">
+                </div>
+            </div>
+            <div class="form-group half-width">
+                <div>
+                    <label>Work Zone Length (mi)</label>
+                    <input type="number" id="wzLength" value="2.5" min="0.1" max="50" step="0.1">
+                </div>
+                <div>
+                    <label>Duration (months)</label>
+                    <input type="number" id="duration" value="12" min="1" max="120" step="1">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Total Construction Value ($)</label>
+                <input type="number" id="constructionCost" value="10000000" step="100000">
+                <span class="help-text">Used to compute SWZ expenditure as a percentage of total cost.</span>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>2. Procurement Strategy</h2>
+            <div class="form-group half-width">
+                <div>
+                    <label>Contract Strategy</label>
+                    <select id="procStrategy" onchange="toggleStrategyParams()">
+                        <option value="lease">Lease / Rental</option>
+                        <option value="buy">Capital Purchase</option>
+                    </select>
+                </div>
+                <div id="leaseField">
+                    <label>Lease Factor (% / mo)</label>
+                    <input type="number" id="leaseFactor" value="6.5" min="1" max="20" step="0.5">
+                </div>
+                <div id="maintField" style="display:none;">
+                    <label>O&amp;M Rate ($/mo/dev)</label>
+                    <input type="number" id="c_maint" value="350">
+                </div>
+            </div>
+            <span class="help-text" id="strategyHelp">Lease covers equipment and maintenance via a monthly rate.</span>
+        </div>
+
+        <div class="panel">
+            <h2>3. SWZ System Selection</h2>
+            <div class="checkbox-list">
+                <label class="checkbox-item">
+                    <input type="checkbox" class="sys-chk" value="tqds" checked>
+                    <div class="checkbox-text"><strong>Queue Warning</strong><span>Sensors, PCMS</span></div>
+                </label>
+                <label class="checkbox-item">
+                    <input type="checkbox" class="sys-chk" value="ttts" checked>
+                    <div class="checkbox-text"><strong>Traveler Info</strong><span>Travel time messages</span></div>
+                </label>
+                <label class="checkbox-item">
+                    <input type="checkbox" class="sys-chk" value="tsms">
+                    <div class="checkbox-text"><strong>Speed Feedback</strong><span>Radar speed signs</span></div>
+                </label>
+                <label class="checkbox-item">
+                    <input type="checkbox" class="sys-chk" value="dlms">
+                    <div class="checkbox-text"><strong>Dyn. Lane Merge</strong><span>Early/late modes</span></div>
+                </label>
+                <label class="checkbox-item">
+                    <input type="checkbox" class="sys-chk" value="tceas">
+                    <div class="checkbox-text"><strong>Construction Alert</strong><span>Truck entry/exit</span></div>
+                </label>
+                <label class="checkbox-item">
+                    <input type="checkbox" class="sys-chk" value="tohws">
+                    <div class="checkbox-text"><strong>Over-Height Warn</strong><span>Clearance alert</span></div>
+                </label>
+                <label class="checkbox-item">
+                    <input type="checkbox" class="sys-chk" value="tidss">
+                    <div class="checkbox-text"><strong>Incident Mgmt</strong><span>CCTV, TOC links</span></div>
+                </label>
+                <label class="checkbox-item">
+                    <input type="checkbox" class="sys-chk" value="vsls">
+                    <div class="checkbox-text"><strong>Var. Speed Limit</strong><span>Dynamic limits</span></div>
+                </label>
+            </div>
+        </div>
+
+        <details class="panel">
+            <summary>4. Unit Cost Schedule ($) - Click to Edit</summary>
+            <span class="help-text" style="margin-bottom: 12px; display: block;">Defaults are based on ARDOT bid history.</span>
+            <div class="form-group half-width">
+                <div><label>PCMS Unit</label><input type="number" id="c_pcms" value="16500"></div>
+                <div><label>Radar Sensor</label><input type="number" id="c_sensor" value="4200"></div>
+            </div>
+            <div class="form-group half-width">
+                <div><label>CCTV Camera</label><input type="number" id="c_camera" value="8500"></div>
+                <div><label>Speed Sign</label><input type="number" id="c_speed" value="9500"></div>
+            </div>
+            <div class="form-group half-width">
+                <div><label>VSL Sign</label><input type="number" id="c_vsl" value="5500"></div>
+                <div><label>Controller</label><input type="number" id="c_control" value="5000"></div>
+            </div>
+            <div class="form-group">
+                <label>Mobilization (per system)</label>
+                <input type="number" id="c_mob" value="6500">
+            </div>
+        </details>
+
+        <div id="valMsg" class="alert-error"></div>
+        <div style="display: flex; gap: 10px; margin-top: 5px;">
+            <button class="btn btn-outline" onclick="clearForm()" style="flex: 1;">Clear Form</button>
+            <button class="btn btn-primary" onclick="calculate()" style="flex: 2; margin-top: 0;">Generate Estimate</button>
+        </div>
+    </aside>
+
+    <main>
+        <div id="placeholder" class="placeholder">
+            <h3>No Data Generated</h3>
+            <p>Please complete the input parameters on the left and click "Generate Estimate" to view the project cost schedule.</p>
+        </div>
+
+        <div id="resultsArea">
+            <div class="summary-grid">
+                <div class="stat-card highlight">
+                    <div class="stat-title">Total Estimated Cost</div>
+                    <div class="stat-value" id="s_total">—</div>
+                    <div class="stat-desc" id="s_strategy">—</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">Estimated Daily Cost</div>
+                    <div class="stat-value" id="s_daily">—</div>
+                    <div class="stat-desc">Averaged over duration</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">SWZ as % of Construction</div>
+                    <div class="stat-value" id="s_pct">—</div>
+                    <div class="stat-desc" id="s_pct_note">ARDOT target: &lt; 4%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">Field Devices (Pooled)</div>
+                    <div class="stat-value" id="s_devices">—</div>
+                    <div class="stat-desc" id="s_sys_count">—</div>
+                </div>
+            </div>
+
+            <div class="alert" id="flagsPanel" style="display: none;">
+                <strong>Engineering Review Flags:</strong>
+                <ul id="flagsList"></ul>
+            </div>
+
+            <div class="panel" style="padding: 0; border: none; box-shadow: none;">
+                <h2 style="border:none; margin-bottom: 5px;">Equipment & Service Schedule</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Item Description</th>
+                            <th>Allocation Type</th>
+                            <th class="text-right">Pooled Qty</th>
+                            <th class="text-right" id="unitHeader">Effective Unit Cost</th>
+                            <th class="text-right">Line Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scheduleBody"></tbody>
+                </table>
+
+                <h2 style="border:none; margin-bottom: 5px;">Per-System Device Requirements (Pre-Pooling)</h2>
+                <p class="help-text" style="margin-bottom: 10px; font-size: 11px;">Note: Shared devices (PCMS, sensors, cameras, controllers) are max-pooled. The largest single-system requirement governs the total to eliminate redundancy.</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>System</th>
+                            <th class="text-right">PCMS</th>
+                            <th class="text-right">Sensors</th>
+                            <th class="text-right">Cameras</th>
+                            <th class="text-right">Spd Signs</th>
+                            <th class="text-right">VSL Signs</th>
+                            <th class="text-right">Controllers</th>
+                            <th class="text-right">System Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sysBody"></tbody>
+                </table>
+            </div>
+
+            <div class="action-bar">
+                <button class="btn btn-secondary" onclick="downloadPDF()">Download Official PDF Report</button>
+                <button class="btn btn-outline" onclick="window.print()">Print View</button>
+            </div>
+        </div>
+    </main>
+</div>
+
+<footer style="text-align: center; padding: 15px; font-size: 11px; color: var(--text-muted); border-top: 1px solid var(--border-color); margin-top: 20px;">
+    Arkansas Department of Transportation<br>
+    For planning purposes only. Costs subject to competitive procurement.
+</footer>
+
+<script>
+let result = null;
+
+// Initialize Date
+document.getElementById('prepDate').valueAsDate = new Date();
+
+function clearForm() {
+    document.getElementById('projName').value = '';
+    document.getElementById('prepName').value = '';
+    document.getElementById('prepDate').valueAsDate = new Date();
+    document.getElementById('wzLength').value = '2.5';
+    document.getElementById('duration').value = '12';
+    document.getElementById('constructionCost').value = '10000000';
+    
+    document.getElementById('procStrategy').value = 'lease';
+    document.getElementById('leaseFactor').value = '6.5';
+    document.getElementById('c_maint').value = '350';
+    toggleStrategyParams();
+
+    document.getElementById('c_pcms').value = '16500';
+    document.getElementById('c_sensor').value = '4200';
+    document.getElementById('c_camera').value = '8500';
+    document.getElementById('c_speed').value = '9500';
+    document.getElementById('c_vsl').value = '5500';
+    document.getElementById('c_control').value = '5000';
+    document.getElementById('c_mob').value = '6500';
+
+    const defaults = ['tqds', 'ttts'];
+    document.querySelectorAll('.sys-chk').forEach(cb => {
+        cb.checked = defaults.includes(cb.value);
+    });
+
+    document.getElementById('resultsArea').style.display = 'none';
+    document.getElementById('placeholder').style.display = 'block';
+    document.getElementById('valMsg').style.display = 'none';
+    
+    result = null;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function toggleStrategyParams() {
+    const strategy = document.getElementById('procStrategy').value;
+    document.getElementById('leaseField').style.display = strategy === 'lease' ? 'block' : 'none';
+    document.getElementById('maintField').style.display = strategy === 'buy' ? 'block' : 'none';
+    document.getElementById('strategyHelp').innerText = strategy === 'lease' 
+        ? 'Lease covers equipment and maintenance via a monthly rate.' 
+        : 'Full capital purchase. O&M charged separately.';
+}
+
+function fmt(n)  { return '$' + Math.round(n).toLocaleString('en-US'); }
+function fmtN(n) { return n > 0 ? n : '—'; }
+
+function getReq(t, len) {
+  const l = Math.max(0.5, len);
+  switch (t) {
+    case 'tqds':  return { pcms: Math.max(3, l*1.5),        sensor: Math.max(4, l*2),              camera: 0,                            speedSign: 0,                  vslSign: 0,                        controller: 1 };
+    case 'tsms':  return { pcms: 0,                          sensor: Math.max(2, l*0.8),             camera: 0,                            speedSign: Math.max(2, l*0.8), vslSign: 0,                        controller: 1 };
+    case 'tceas': return { pcms: 2,                          sensor: 4,                              camera: 0,                            speedSign: 0,                  vslSign: 0,                        controller: 1 };
+    case 'ttts':  return { pcms: Math.max(2, l*0.5),         sensor: Math.max(4, l*1.5),             camera: 0,                            speedSign: 0,                  vslSign: 0,                        controller: 1 };
+    case 'tidss': return { pcms: 0,                          sensor: Math.max(2, l),                 camera: Math.max(2, Math.ceil(l*1.2)), speedSign: 0,                  vslSign: 0,                        controller: 1 };
+    case 'tohws': return { pcms: 2,                          sensor: 4,                              camera: 0,                            speedSign: 0,                  vslSign: 0,                        controller: 1 };
+    case 'dlms':  return { pcms: 4,                          sensor: 4,                              camera: 0,                            speedSign: 0,                  vslSign: 0,                        controller: 1 };
+    case 'vsls':  return { pcms: 0,                          sensor: Math.max(4, l*1.5),             camera: 0,                            speedSign: 0,                  vslSign: Math.max(6, Math.ceil(l*2)), controller: 1 };
+    default:      return { pcms: 0, sensor: 0, camera: 0, speedSign: 0, vslSign: 0, controller: 0 };
+  }
+}
+
+const SYS_META = {
+  tqds:  'Queue Warning (TQDS)',
+  tsms:  'Speed Feedback (TSMS)',
+  tceas: 'Construction Vehicle Alert (TCEAS)',
+  ttts:  'Traveler Information (TTTS)',
+  tidss: 'Incident Management (TIDSS)',
+  tohws: 'Over-Height Warning (TOHWS)',
+  dlms:  'Dynamic Lane Merge (DLMS)',
+  vsls:  'Variable Speed Limit (VSLS)',
+};
+
+function calculate() {
+  document.getElementById('valMsg').style.display = 'none';
+  
+  const length   = parseFloat(document.getElementById('wzLength').value);
+  const duration = parseFloat(document.getElementById('duration').value);
+  const constr   = parseFloat(document.getElementById('constructionCost').value) || 0;
+  const strategy = document.getElementById('procStrategy').value;
+  const lf       = parseFloat(document.getElementById('leaseFactor').value) / 100;
+  
+  const techCheckboxes = document.querySelectorAll('.sys-chk:checked');
+  const techs = Array.from(techCheckboxes).map(cb => cb.value);
+
+  if (!techs.length)                  { showVal('Please select at least one SWZ system.'); return; }
+  if (isNaN(length)   || length  <= 0) { showVal('Work zone length must be greater than 0.'); return; }
+  if (isNaN(duration) || duration < 1) { showVal('Duration must be at least 1 month.'); return; }
+  if (strategy === 'lease' && (lf <= 0 || lf > 0.5)) { showVal('Lease factor must be between 1% and 50%.'); return; }
+
+  const uc = {
+    pcms:       +document.getElementById('c_pcms').value    || 0,
+    sensor:     +document.getElementById('c_sensor').value  || 0,
+    camera:     +document.getElementById('c_camera').value  || 0,
+    speedSign:  +document.getElementById('c_speed').value   || 0,
+    vslSign:    +document.getElementById('c_vsl').value     || 0,
+    controller: +document.getElementById('c_control').value || 0,
+    mob:        +document.getElementById('c_mob').value     || 0,
+    maint:      strategy === 'buy' ? (+document.getElementById('c_maint').value || 0) : 0,
+  };
+
+  const sysReqs = {};
+  techs.forEach(t => { sysReqs[t] = getReq(t, length); });
+
+  let pooled = { pcms:0, sensor:0, camera:0, speedSign:0, vslSign:0, controller:0 };
+  techs.forEach(t => {
+    const r = sysReqs[t];
+    pooled.pcms       = Math.max(pooled.pcms,       Math.ceil(r.pcms));
+    pooled.sensor     = Math.max(pooled.sensor,     Math.ceil(r.sensor));
+    pooled.camera     = Math.max(pooled.camera,     Math.ceil(r.camera));
+    pooled.controller = Math.max(pooled.controller, Math.ceil(r.controller));
+    pooled.speedSign += Math.ceil(r.speedSign);
+    pooled.vslSign   += Math.ceil(r.vslSign);
+  });
+  pooled.controller = Math.max(pooled.controller, Math.ceil(techs.length / 3));
+
+  const DEVICE_DEF = [
+    { key:'pcms',       label:'Portable Changeable Message Sign (PCMS)', cls:'Shared'   },
+    { key:'sensor',     label:'Traffic Sensor — Radar/Bluetooth',         cls:'Shared'   },
+    { key:'camera',     label:'CCTV Camera Assembly (PTZ)',               cls:'Shared'   },
+    { key:'speedSign',  label:'Speed Feedback Sign (PTSM)',               cls:'Dedicated' },
+    { key:'vslSign',    label:'Variable Speed Limit Sign',                cls:'Dedicated' },
+    { key:'controller', label:'System Controller / Master Unit',          cls:'Shared'   },
+  ];
+
+  let hwRows = [], totalDevices = 0, hwTotal = 0;
+  DEVICE_DEF.forEach(d => {
+    const qty = pooled[d.key];
+    if (!qty) return;
+    totalDevices += qty;
+    const baseUnit      = uc[d.key];
+    const effectiveUnit = strategy === 'lease' ? baseUnit * lf * duration : baseUnit;
+    const lineTotal     = effectiveUnit * qty;
+    hwTotal += lineTotal;
+    hwRows.push({ label: d.label, cls: d.cls, qty, baseUnit, effectiveUnit, lineTotal });
+  });
+
+  const mobMult    = length > 5 ? 1 + (length - 5) * 0.05 : 1;
+  const mobTotal   = techs.length * uc.mob * mobMult;
+  const maintTotal = strategy === 'buy' ? totalDevices * uc.maint * duration : 0;
+  const grandTotal = hwTotal + mobTotal + maintTotal;
+  const dayRate    = grandTotal / (duration * 30);
+  const swzPct     = constr > 0 ? (grandTotal / constr * 100) : null;
+
+  const flags = [];
+  if (swzPct !== null && swzPct > 4)
+    flags.push(`Estimated SWZ cost is ${swzPct.toFixed(1)}% of total construction value. ARDOT historical deployments have averaged below 4%.`);
+  if (strategy === 'lease' && duration > 18)
+    flags.push(`Lease duration of ${duration} months is extended. A capital purchase analysis is recommended for deployments exceeding 18 months.`);
+  if (strategy === 'buy' && duration < 6)
+    flags.push(`Project duration of ${duration} months is short. Leasing is typically more cost-effective than capital purchase for deployments under 6 months.`);
+  if (techs.includes('tidss') && !techs.includes('tqds'))
+    flags.push('Incident Management (TIDSS) is selected without Queue Warning (TQDS). Integration of incident detection with queue warning sensors is recommended.');
+  if (techs.includes('vsls') && !techs.includes('tqds'))
+    flags.push('Variable Speed Limit (VSLS) performance is significantly improved when deployed in conjunction with Queue Warning (TQDS).');
+  if (length >= 10 && !techs.includes('tidss'))
+    flags.push(`Work zone length of ${length} miles exceeds 10 miles. Consider adding Incident Management (TIDSS) for extended closures.`);
+
+  result = {
+    project: document.getElementById('projName').value,
+    by:      document.getElementById('prepName').value,
+    date:    document.getElementById('prepDate').value,
+    length, duration, strategy, constr, lf,
+    leaseFactor: lf * 100,
+    techs, sysReqs, uc, pooled,
+    hwRows, mobTotal, maintTotal, hwTotal, grandTotal,
+    totalDevices, dayRate, swzPct, flags,
+  };
+  renderResults(result);
+}
+
+function renderResults(d) {
+  document.getElementById('placeholder').style.display  = 'none';
+  document.getElementById('resultsArea').style.display  = 'block';
+
+  document.getElementById('s_total').textContent    = fmt(d.grandTotal);
+  document.getElementById('s_strategy').textContent = d.strategy === 'lease'
+    ? `Lease @ ${d.leaseFactor}%/mo \u00d7 ${d.duration} months` : 'Capital Purchase';
+  document.getElementById('s_daily').textContent    = fmt(d.dayRate);
+  document.getElementById('s_devices').textContent  = d.totalDevices;
+  document.getElementById('s_sys_count').textContent = `${d.techs.length} system${d.techs.length !== 1 ? 's' : ''} selected`;
+
+  const pctEl   = document.getElementById('s_pct');
+  const pctNote = document.getElementById('s_pct_note');
+  if (d.swzPct !== null) {
+    pctEl.textContent   = d.swzPct.toFixed(1) + '%';
+    pctEl.className     = 'stat-value' + (d.swzPct > 4 ? ' text-danger' : '');
+    pctNote.textContent = `of ${fmt(d.constr)} construction value`;
+  } else {
+    pctEl.textContent   = '—';
+    pctNote.textContent = 'Enter construction value above';
+  }
+
+  document.getElementById('unitHeader').textContent = d.strategy === 'lease'
+    ? 'Total Rental Cost (Full Term)' : 'Unit Purchase Price';
+
+  const fp = document.getElementById('flagsPanel');
+  const fl = document.getElementById('flagsList');
+  if (d.flags.length) {
+    fl.innerHTML     = d.flags.map(f => `<li>${f}</li>`).join('');
+    fp.style.display = 'block';
+  } else {
+    fp.style.display = 'none';
+  }
+
+  const sb = document.getElementById('scheduleBody');
+  sb.innerHTML = '';
+  d.hwRows.forEach(r => {
+    sb.innerHTML += `<tr>
+      <td><strong>${r.label}</strong></td>
+      <td>${r.cls}</td>
+      <td class="text-right">${r.qty}</td>
+      <td class="text-right">${fmt(r.effectiveUnit)}</td>
+      <td class="text-right">${fmt(r.lineTotal)}</td>
+    </tr>`;
+  });
+  
+  sb.innerHTML += `<tr>
+    <td><strong>Mobilization &amp; System Integration</strong></td>
+    <td>Per System</td>
+    <td class="text-right">${d.techs.length}</td>
+    <td class="text-right">${fmt(d.uc.mob)}</td>
+    <td class="text-right">${fmt(d.mobTotal)}</td>
+  </tr>`;
+  
+  if (d.strategy === 'buy' && d.maintTotal > 0) {
+    sb.innerHTML += `<tr>
+      <td><strong>Operations &amp; Maintenance</strong> (${d.duration} months)</td>
+      <td>Service (O&amp;M)</td>
+      <td class="text-right">${d.totalDevices} devices</td>
+      <td class="text-right">${fmt(d.uc.maint)}/mo</td>
+      <td class="text-right">${fmt(d.maintTotal)}</td>
+    </tr>`;
+  } else {
+    sb.innerHTML += `<tr>
+      <td colspan="4" style="color:var(--text-muted); font-style:italic;">Operations & Maintenance is included within the lease rate.</td>
+      <td class="text-right">Included</td>
+    </tr>`;
+  }
+  sb.innerHTML += `<tr class="table-footer">
+    <td colspan="4" class="text-right">Grand Total &mdash; Estimated Project Cost</td>
+    <td class="text-right">${fmt(d.grandTotal)}</td>
+  </tr>`;
+
+  const syb = document.getElementById('sysBody');
+  syb.innerHTML = '';
+  d.techs.forEach(t => {
+    const r   = d.sysReqs[t];
+    const raw = Math.ceil(r.pcms)*d.uc.pcms + Math.ceil(r.sensor)*d.uc.sensor +
+                Math.ceil(r.camera)*d.uc.camera + Math.ceil(r.speedSign)*d.uc.speedSign +
+                Math.ceil(r.vslSign)*d.uc.vslSign + Math.ceil(r.controller)*d.uc.controller;
+    const cost = d.strategy === 'lease' ? raw * d.lf * d.duration : raw;
+    syb.innerHTML += `<tr>
+      <td><strong>${SYS_META[t]}</strong></td>
+      <td class="text-right">${fmtN(Math.ceil(r.pcms))}</td>
+      <td class="text-right">${fmtN(Math.ceil(r.sensor))}</td>
+      <td class="text-right">${fmtN(Math.ceil(r.camera))}</td>
+      <td class="text-right">${fmtN(Math.ceil(r.speedSign))}</td>
+      <td class="text-right">${fmtN(Math.ceil(r.vslSign))}</td>
+      <td class="text-right">${fmtN(Math.ceil(r.controller))}</td>
+      <td class="text-right">${fmt(cost)}</td>
+    </tr>`;
+  });
+}
+
+function downloadPDF() {
+  if (!result) return;
+  const d = result;
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'letter' });
+  const PW = 215.9, ML = 16, MR = 16, CW = PW - ML - MR;
+
+  doc.setFillColor(13,35,64); doc.rect(0,0,PW,34,'F');
+  doc.setFillColor(204,0,0);  doc.rect(0,34,PW,2.5,'F');
+
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(14); doc.setFont(undefined,'bold');
+  doc.text('Arkansas Department of Transportation', ML+4, 13);
+  doc.setFontSize(10.5); doc.setFont(undefined,'normal');
+  doc.text('Smart Work Zone Cost Estimate', ML+4, 21);
+  doc.setFontSize(8); doc.setTextColor(170,195,220);
+  
+  // Format the date string safely
+  let reportDate = d.date;
+  if(d.date.includes('-')) {
+    const ds = d.date.split('-');
+    reportDate = new Date(ds[0], ds[1]-1, ds[2]).toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+  }
+  
+  doc.text(`Generated: ${reportDate}`, ML+4, 28);
+  doc.text('Official Estimate', PW-MR, 28, {align:'right'});
+
+  let y = 44;
+
+  doc.setFillColor(244,247,251); doc.setDrawColor(208,216,226);
+  doc.rect(ML,y,CW,24,'FD');
+  doc.setTextColor(0); doc.setFontSize(8.5);
+  const c2 = ML + CW/2 + 4;
+  [
+    ['Project:',      d.project||'N/A',  'Work Zone Length:', `${d.length} miles`],
+    ['Prepared By:',  d.by||'N/A',       'Duration:',         `${d.duration} months`],
+    ['Date:',         reportDate||'N/A', 'Procurement:',      d.strategy==='lease' ? `Lease @ ${d.leaseFactor}%/month` : 'Capital Purchase'],
+  ].forEach(([la,va,lb,vb],i) => {
+    const ry = y+7+i*6;
+    doc.setFont(undefined,'bold');   doc.text(la, ML+4, ry);
+    doc.setFont(undefined,'normal'); doc.text(va, ML+30, ry);
+    doc.setFont(undefined,'bold');   doc.text(lb, c2, ry);
+    doc.setFont(undefined,'normal'); doc.text(vb, c2+30, ry);
+  });
+  y += 30;
+
+  doc.setFillColor(236,244,255); doc.setDrawColor(13,35,64);
+  doc.rect(ML,y,CW,18,'FD');
+  doc.setFontSize(8.5); doc.setFont(undefined,'normal'); doc.setTextColor(80);
+  doc.text('TOTAL ESTIMATED PROJECT COST', PW/2, y+7, {align:'center'});
+  doc.setFontSize(18); doc.setFont(undefined,'bold'); doc.setTextColor(13,35,64);
+  doc.text(fmt(d.grandTotal), PW/2, y+15, {align:'center'});
+  y += 24;
+
+  doc.setFillColor(13,35,64); doc.rect(ML,y,CW,12,'F');
+  const metrics = [
+    ['Daily Cost', fmt(d.dayRate)],
+    ['Monthly Cost', fmt(d.grandTotal/d.duration)],
+    ['Field Devices', String(d.totalDevices)],
+    ['% of Construction', d.swzPct!==null ? d.swzPct.toFixed(1)+'%' : 'N/A'],
+    ['Systems Selected', String(d.techs.length)],
+  ];
+  metrics.forEach(([lbl,val],i) => {
+    const mx = ML + i*(CW/metrics.length) + (CW/metrics.length)/2;
+    doc.setTextColor(140,175,210); doc.setFontSize(6.5); doc.setFont(undefined,'normal');
+    doc.text(lbl, mx, y+5, {align:'center'});
+    doc.setTextColor(255,255,255); doc.setFontSize(8); doc.setFont(undefined,'bold');
+    doc.text(val, mx, y+10, {align:'center'});
+  });
+  y += 18;
+
+  if (d.flags.length) {
+    const fh = 8 + d.flags.length * 5.5;
+    doc.setFillColor(255,252,240); doc.setDrawColor(232,200,112);
+    doc.rect(ML,y,CW,fh,'FD');
+    doc.setTextColor(120,88,0); doc.setFontSize(7.5); doc.setFont(undefined,'bold');
+    doc.text('REVIEW FLAGS', ML+4, y+6);
+    doc.setFont(undefined,'normal'); doc.setFontSize(7);
+    d.flags.forEach((f,i) => { doc.text(`\u2022  ${f}`, ML+6, y+11+i*5.5, {maxWidth:CW-8}); });
+    y += fh + 4;
+  }
+
+  const schedRows = [];
+  d.hwRows.forEach(r => schedRows.push([r.label, r.cls, String(r.qty), fmt(r.effectiveUnit), fmt(r.lineTotal)]));
+  schedRows.push(['Mobilization & System Integration', 'Per System', String(d.techs.length), fmt(d.uc.mob), fmt(d.mobTotal)]);
+  if (d.strategy==='buy' && d.maintTotal>0) {
+    schedRows.push([`Operations & Maintenance (${d.duration} mo)`, 'O&M', `${d.totalDevices} dev`, `${fmt(d.uc.maint)}/mo`, fmt(d.maintTotal)]);
+  } else {
+    schedRows.push(['Operations & Maintenance', 'Included in lease', '\u2014', '\u2014', 'Included']);
+  }
+
+  doc.autoTable({
+    startY: y,
+    head: [['Item Description','Classification','Pooled Qty', d.strategy==='lease'?'Total Rental Cost':'Unit Purchase Price','Line Total']],
+    body: schedRows,
+    foot: [['','','','Grand Total', fmt(d.grandTotal)]],
+    theme: 'grid', styles:{fontSize:8},
+    headStyles:{fillColor:[0,40,85],textColor:[255,255,255],fontStyle:'bold'},
+    footStyles:{fillColor:[234,237,237],textColor:[0,40,85],fontStyle:'bold'},
+    columnStyles:{3:{halign:'right'},4:{halign:'right'}},
+    margin:{left:ML,right:MR},
+  });
+  y = doc.lastAutoTable.finalY + 6;
+
+  if (y < 240) {
+    doc.setFontSize(8.5); doc.setFont(undefined,'bold'); doc.setTextColor(0,40,85);
+    doc.text('Per-System Device Requirements (Pre-Pooling)', ML, y); y += 4;
+    const sysRows = d.techs.map(t => {
+      const r = d.sysReqs[t];
+      const raw = Math.ceil(r.pcms)*d.uc.pcms + Math.ceil(r.sensor)*d.uc.sensor +
+                  Math.ceil(r.camera)*d.uc.camera + Math.ceil(r.speedSign)*d.uc.speedSign +
+                  Math.ceil(r.vslSign)*d.uc.vslSign + Math.ceil(r.controller)*d.uc.controller;
+      const cost = d.strategy==='lease' ? raw*d.lf*d.duration : raw;
+      return [SYS_META[t], Math.ceil(r.pcms)||'\u2014', Math.ceil(r.sensor)||'\u2014',
+              Math.ceil(r.camera)||'\u2014', Math.ceil(r.speedSign)||'\u2014',
+              Math.ceil(r.vslSign)||'\u2014', Math.ceil(r.controller)||'\u2014', fmt(cost)];
+    });
+    doc.autoTable({
+      startY:y,
+      head:[['System','PCMS','Sensors','Cameras','Spd Signs','VSL','Controllers','Subtotal']],
+      body:sysRows, theme:'grid', styles:{fontSize:7.5},
+      headStyles:{fillColor:[0,40,85],textColor:[255,255,255]},
+      columnStyles:{7:{halign:'right'}},
+      margin:{left:ML,right:MR},
+    });
+    y = doc.lastAutoTable.finalY + 5;
+  }
+
+  doc.setFontSize(7); doc.setFont(undefined,'normal'); doc.setTextColor(130);
+  doc.text('This estimate is prepared for planning purposes only. Actual costs are subject to competitive procurement. SWZ expenditure is typically less than 4% of total construction cost.', ML, y, {maxWidth:CW});
+
+  const total = doc.internal.getNumberOfPages();
+  for (let i=1; i<=total; i++) {
+    doc.setPage(i); doc.setFontSize(8); doc.setTextColor(160);
+    doc.text(`Page ${i} of ${total}`, PW/2, 272, {align:'center'});
+  }
+
+  doc.save(`ARDOT_SWZ_Estimate_${(d.project||'Project').replace(/[^a-zA-Z0-9]/g,'_')}.pdf`);
+}
+</script>
+</body>
+</html>
