@@ -281,7 +281,7 @@
             <h2>1. Project Details</h2>
             <div class="form-group">
                 <label>Project Name / Job Number</label>
-                <input type="text" id="projName" placeholder="e.g. Job 061590 — I-40 Corridor">
+                <input type="text" id="projName" placeholder="e.g. Job 061590, I-40 Corridor">
             </div>
             <div class="form-group half-width">
                 <div>
@@ -337,42 +337,42 @@
             <div class="checkbox-list">
                 <label class="checkbox-item">
                     <input type="checkbox" class="sys-chk" value="tqds" checked>
-                    <div class="checkbox-text"><strong>Queue Warning</strong><span>Sensors, PCMS</span></div>
+                    <div class="checkbox-text"><strong>Queue-Warning System</strong><span>Sensors, PCMS</span></div>
                 </label>
                 <label class="checkbox-item">
                     <input type="checkbox" class="sys-chk" value="ttts" checked>
-                    <div class="checkbox-text"><strong>Traveler Info</strong><span>Travel time messages</span></div>
+                    <div class="checkbox-text"><strong>Real-Time Traveler-Information System</strong><span>Travel time messages</span></div>
                 </label>
                 <label class="checkbox-item">
                     <input type="checkbox" class="sys-chk" value="tsms">
-                    <div class="checkbox-text"><strong>Speed Feedback</strong><span>Radar speed signs</span></div>
+                    <div class="checkbox-text"><strong>Dynamic Speed-Feedback Signs</strong><span>Radar speed signs</span></div>
                 </label>
                 <label class="checkbox-item">
                     <input type="checkbox" class="sys-chk" value="dlms">
-                    <div class="checkbox-text"><strong>Dyn. Lane Merge</strong><span>Early/late modes</span></div>
+                    <div class="checkbox-text"><strong>Dynamic Lane-Merge System</strong><span>Early/late modes</span></div>
                 </label>
                 <label class="checkbox-item">
                     <input type="checkbox" class="sys-chk" value="tceas">
-                    <div class="checkbox-text"><strong>Construction Alert</strong><span>Truck entry/exit</span></div>
+                    <div class="checkbox-text"><strong>Construction Equipment Alert</strong><span>Truck entry/exit</span></div>
                 </label>
                 <label class="checkbox-item">
                     <input type="checkbox" class="sys-chk" value="tohws">
-                    <div class="checkbox-text"><strong>Over-Height Warn</strong><span>Clearance alert</span></div>
+                    <div class="checkbox-text"><strong>Over-Height Warning System</strong><span>Clearance alert</span></div>
                 </label>
                 <label class="checkbox-item">
                     <input type="checkbox" class="sys-chk" value="tidss">
-                    <div class="checkbox-text"><strong>Incident Mgmt</strong><span>CCTV, TOC links</span></div>
+                    <div class="checkbox-text"><strong>Incident-Management System</strong><span>CCTV, TOC links</span></div>
                 </label>
                 <label class="checkbox-item">
                     <input type="checkbox" class="sys-chk" value="vsls">
-                    <div class="checkbox-text"><strong>Var. Speed Limit</strong><span>Dynamic limits</span></div>
+                    <div class="checkbox-text"><strong>Variable Speed Limit System</strong><span>Dynamic limits</span></div>
                 </label>
             </div>
         </div>
 
         <details class="panel">
             <summary>4. Unit Cost Schedule ($) - Click to Edit</summary>
-            <span class="help-text" style="margin-bottom: 12px; display: block;">Defaults are based on ARDOT bid history.</span>
+            <span class="help-text" style="margin-bottom: 12px; display: block;">Defaults are based on ARDOT bid history. Adjust unit costs to match current vendor pricing and click "Set as Default" to save your values so they persist across sessions. Use Panel 5 below to override calculated device quantities if field conditions differ from the formula assumptions.</span>
             <div class="form-group half-width">
                 <div><label>PCMS Unit</label><input type="number" id="c_pcms" value="16500"></div>
                 <div><label>Radar Sensor</label><input type="number" id="c_sensor" value="4200"></div>
@@ -388,6 +388,26 @@
             <div class="form-group">
                 <label>Mobilization (per system)</label>
                 <input type="number" id="c_mob" value="6500">
+            </div>
+            <div style="margin-top: 8px;">
+                <button class="btn btn-outline" onclick="saveCostsAsDefault()" style="width: 100%; font-size: 11px; padding: 6px;">Set as Default</button>
+            </div>
+        </details>
+
+        <details class="panel">
+            <summary>5. Quantity Overrides (Optional) - Click to Edit</summary>
+            <span class="help-text" style="margin-bottom: 12px; display: block;">The tool calculates device quantities from standard formulas. If actual field conditions require different quantities (e.g., based on sight distance, interchange spacing, or detector positions), enter overrides below. Leave blank or 0 to use the formula-calculated defaults.</span>
+            <div class="form-group half-width">
+                <div><label>PCMS Qty</label><input type="number" id="qo_pcms" value="0" min="0"><span class="help-text">Override pooled PCMS count</span></div>
+                <div><label>Sensor Qty</label><input type="number" id="qo_sensor" value="0" min="0"><span class="help-text">Override pooled sensor count</span></div>
+            </div>
+            <div class="form-group half-width">
+                <div><label>Camera Qty</label><input type="number" id="qo_camera" value="0" min="0"><span class="help-text">Override pooled camera count</span></div>
+                <div><label>Speed Sign Qty</label><input type="number" id="qo_speed" value="0" min="0"><span class="help-text">Override speed sign count</span></div>
+            </div>
+            <div class="form-group half-width">
+                <div><label>VSL Sign Qty</label><input type="number" id="qo_vsl" value="0" min="0"><span class="help-text">Override VSL sign count</span></div>
+                <div><label>Controller Qty</label><input type="number" id="qo_ctrl" value="0" min="0"><span class="help-text">Override controller count</span></div>
             </div>
         </details>
 
@@ -408,23 +428,23 @@
             <div class="summary-grid">
                 <div class="stat-card highlight">
                     <div class="stat-title">Total Estimated Cost</div>
-                    <div class="stat-value" id="s_total">—</div>
-                    <div class="stat-desc" id="s_strategy">—</div>
+                    <div class="stat-value" id="s_total">-</div>
+                    <div class="stat-desc" id="s_strategy">-</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-title">Estimated Daily Cost</div>
-                    <div class="stat-value" id="s_daily">—</div>
+                    <div class="stat-value" id="s_daily">-</div>
                     <div class="stat-desc">Averaged over duration</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-title">SWZ as % of Construction</div>
-                    <div class="stat-value" id="s_pct">—</div>
+                    <div class="stat-value" id="s_pct">-</div>
                     <div class="stat-desc" id="s_pct_note">ARDOT target: &lt; 4%</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-title">Field Devices (Pooled)</div>
-                    <div class="stat-value" id="s_devices">—</div>
-                    <div class="stat-desc" id="s_sys_count">—</div>
+                    <div class="stat-value" id="s_devices">-</div>
+                    <div class="stat-desc" id="s_sys_count">-</div>
                 </div>
             </div>
 
@@ -486,6 +506,9 @@ let result = null;
 // Initialize Date
 document.getElementById('prepDate').valueAsDate = new Date();
 
+// Load any previously saved cost defaults
+loadSavedDefaults();
+
 function clearForm() {
     document.getElementById('projName').value = '';
     document.getElementById('prepName').value = '';
@@ -495,17 +518,21 @@ function clearForm() {
     document.getElementById('constructionCost').value = '10000000';
     
     document.getElementById('procStrategy').value = 'lease';
-    document.getElementById('leaseFactor').value = '6.5';
-    document.getElementById('c_maint').value = '350';
     toggleStrategyParams();
 
-    document.getElementById('c_pcms').value = '16500';
-    document.getElementById('c_sensor').value = '4200';
-    document.getElementById('c_camera').value = '8500';
-    document.getElementById('c_speed').value = '9500';
-    document.getElementById('c_vsl').value = '5500';
-    document.getElementById('c_control').value = '5000';
-    document.getElementById('c_mob').value = '6500';
+    // Restore saved defaults if set, otherwise use ARDOT defaults
+    const saved = getSavedDefaults();
+    if (saved) {
+        Object.keys(saved).forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = saved[id];
+        });
+    } else {
+        Object.keys(ARDOT_DEFAULTS).forEach(id => {
+            document.getElementById(id).value = ARDOT_DEFAULTS[id];
+        });
+    }
+    resetQuantityOverrides();
 
     const defaults = ['tqds', 'ttts'];
     document.querySelectorAll('.sys-chk').forEach(cb => {
@@ -520,6 +547,58 @@ function clearForm() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+const ARDOT_DEFAULTS = {
+    c_pcms: '16500', c_sensor: '4200', c_camera: '8500',
+    c_speed: '9500', c_vsl: '5500', c_control: '5000',
+    c_mob: '6500', leaseFactor: '6.5', c_maint: '350'
+};
+
+function getSavedDefaults() {
+    try {
+        const saved = localStorage.getItem('swz_cost_defaults');
+        return saved ? JSON.parse(saved) : null;
+    } catch(e) { return null; }
+}
+
+function saveCostsAsDefault() {
+    const vals = {};
+    Object.keys(ARDOT_DEFAULTS).forEach(id => {
+        vals[id] = document.getElementById(id).value;
+    });
+    try {
+        localStorage.setItem('swz_cost_defaults', JSON.stringify(vals));
+        alert('Current cost values have been saved as your defaults. They will be restored automatically when you reopen the tool.');
+    } catch(e) {
+        alert('Could not save defaults. Your browser may not support local storage.');
+    }
+}
+
+function resetCostsToDefaults() {
+    Object.keys(ARDOT_DEFAULTS).forEach(id => {
+        document.getElementById(id).value = ARDOT_DEFAULTS[id];
+    });
+    try { localStorage.removeItem('swz_cost_defaults'); } catch(e) {}
+}
+
+function loadSavedDefaults() {
+    const saved = getSavedDefaults();
+    if (saved) {
+        Object.keys(saved).forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = saved[id];
+        });
+    }
+}
+
+function resetQuantityOverrides() {
+    document.getElementById('qo_pcms').value = '0';
+    document.getElementById('qo_sensor').value = '0';
+    document.getElementById('qo_camera').value = '0';
+    document.getElementById('qo_speed').value = '0';
+    document.getElementById('qo_vsl').value = '0';
+    document.getElementById('qo_ctrl').value = '0';
+}
+
 function toggleStrategyParams() {
     const strategy = document.getElementById('procStrategy').value;
     document.getElementById('leaseField').style.display = strategy === 'lease' ? 'block' : 'none';
@@ -530,7 +609,7 @@ function toggleStrategyParams() {
 }
 
 function fmt(n)  { return '$' + Math.round(n).toLocaleString('en-US'); }
-function fmtN(n) { return n > 0 ? n : '—'; }
+function fmtN(n) { return n > 0 ? n : '-'; }
 
 function getReq(t, len) {
   const l = Math.max(0.5, len);
@@ -548,14 +627,14 @@ function getReq(t, len) {
 }
 
 const SYS_META = {
-  tqds:  'Queue Warning (TQDS)',
-  tsms:  'Speed Feedback (TSMS)',
-  tceas: 'Construction Vehicle Alert (TCEAS)',
-  ttts:  'Traveler Information (TTTS)',
-  tidss: 'Incident Management (TIDSS)',
-  tohws: 'Over-Height Warning (TOHWS)',
-  dlms:  'Dynamic Lane Merge (DLMS)',
-  vsls:  'Variable Speed Limit (VSLS)',
+  tqds:  'Queue-Warning System (TQDS)',
+  tsms:  'Dynamic Speed-Feedback Signs (TSMS)',
+  tceas: 'Construction Equipment Alert (TCEAS)',
+  ttts:  'Real-Time Traveler-Information System (TTTS)',
+  tidss: 'Incident-Management System (TIDSS)',
+  tohws: 'Over-Height Warning System (TOHWS)',
+  dlms:  'Dynamic Lane-Merge System (DLMS)',
+  vsls:  'Variable Speed Limit System (VSLS)',
 };
 
 function calculate() {
@@ -601,9 +680,25 @@ function calculate() {
   });
   pooled.controller = Math.max(pooled.controller, Math.ceil(techs.length / 3));
 
+  // Apply quantity overrides if user provided them
+  const qo = {
+    pcms:       +document.getElementById('qo_pcms').value    || 0,
+    sensor:     +document.getElementById('qo_sensor').value  || 0,
+    camera:     +document.getElementById('qo_camera').value  || 0,
+    speedSign:  +document.getElementById('qo_speed').value   || 0,
+    vslSign:    +document.getElementById('qo_vsl').value     || 0,
+    controller: +document.getElementById('qo_ctrl').value    || 0,
+  };
+  if (qo.pcms > 0)       pooled.pcms       = qo.pcms;
+  if (qo.sensor > 0)     pooled.sensor     = qo.sensor;
+  if (qo.camera > 0)     pooled.camera     = qo.camera;
+  if (qo.speedSign > 0)  pooled.speedSign  = qo.speedSign;
+  if (qo.vslSign > 0)    pooled.vslSign    = qo.vslSign;
+  if (qo.controller > 0) pooled.controller = qo.controller;
+
   const DEVICE_DEF = [
     { key:'pcms',       label:'Portable Changeable Message Sign (PCMS)', cls:'Shared'   },
-    { key:'sensor',     label:'Traffic Sensor — Radar/Bluetooth',         cls:'Shared'   },
+    { key:'sensor',     label:'Traffic Sensor (Radar/Bluetooth)',         cls:'Shared'   },
     { key:'camera',     label:'CCTV Camera Assembly (PTZ)',               cls:'Shared'   },
     { key:'speedSign',  label:'Speed Feedback Sign (PTSM)',               cls:'Dedicated' },
     { key:'vslSign',    label:'Variable Speed Limit Sign',                cls:'Dedicated' },
@@ -674,7 +769,7 @@ function renderResults(d) {
     pctEl.className     = 'stat-value' + (d.swzPct > 4 ? ' text-danger' : '');
     pctNote.textContent = `of ${fmt(d.constr)} construction value`;
   } else {
-    pctEl.textContent   = '—';
+    pctEl.textContent   = '-';
     pctNote.textContent = 'Enter construction value above';
   }
 
@@ -838,7 +933,7 @@ function downloadPDF() {
   if (d.strategy==='buy' && d.maintTotal>0) {
     schedRows.push([`Operations & Maintenance (${d.duration} mo)`, 'O&M', `${d.totalDevices} dev`, `${fmt(d.uc.maint)}/mo`, fmt(d.maintTotal)]);
   } else {
-    schedRows.push(['Operations & Maintenance', 'Included in lease', '\u2014', '\u2014', 'Included']);
+    schedRows.push(['Operations & Maintenance', 'Included in lease', '-', '-', 'Included']);
   }
 
   doc.autoTable({
@@ -863,9 +958,9 @@ function downloadPDF() {
                   Math.ceil(r.camera)*d.uc.camera + Math.ceil(r.speedSign)*d.uc.speedSign +
                   Math.ceil(r.vslSign)*d.uc.vslSign + Math.ceil(r.controller)*d.uc.controller;
       const cost = d.strategy==='lease' ? raw*d.lf*d.duration : raw;
-      return [SYS_META[t], Math.ceil(r.pcms)||'\u2014', Math.ceil(r.sensor)||'\u2014',
-              Math.ceil(r.camera)||'\u2014', Math.ceil(r.speedSign)||'\u2014',
-              Math.ceil(r.vslSign)||'\u2014', Math.ceil(r.controller)||'\u2014', fmt(cost)];
+      return [SYS_META[t], Math.ceil(r.pcms)||'-', Math.ceil(r.sensor)||'-',
+              Math.ceil(r.camera)||'-', Math.ceil(r.speedSign)||'-',
+              Math.ceil(r.vslSign)||'-', Math.ceil(r.controller)||'-', fmt(cost)];
     });
     doc.autoTable({
       startY:y,
